@@ -975,8 +975,14 @@ class SessionService : Service() {
         if (clientPinned) {
             guest.add("BL_CLIENT_CPUS=" + CpuCores.listOrAll(SessionPrefs.clientCpus(this)))
         }
-        CpuCores.gameLaunchList(SessionPrefs.gameCpus(this), clientPinned)
-            .takeIf { it.isNotEmpty() }?.let { guest.add("BL_GAME_CPUS=$it") }
+        var gameCpus = CpuCores.gameLaunchList(SessionPrefs.gameCpus(this), clientPinned)
+        if (gameCpus.isEmpty() && !clientPinned &&
+            com.droiddeck.launcher.core.DeviceSupport.mali()) {
+            // On a Mali SoC the game (with its FEX JIT threads) starts pinned to the big
+            // cluster; the Setup UI's game CPU list overrides this by being non-empty.
+            gameCpus = CpuCores.bigClusterDefault()
+        }
+        gameCpus.takeIf { it.isNotEmpty() }?.let { guest.add("BL_GAME_CPUS=$it") }
     }
 
     private fun startVkBridge(guest: MutableList<String>, sessionDir: File) {

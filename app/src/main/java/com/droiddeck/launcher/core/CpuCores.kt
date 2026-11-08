@@ -9,6 +9,25 @@ object CpuCores {
         FileUtils.readString(File("/sys/devices/system/cpu/cpu$core/cpufreq/cpuinfo_max_freq"))
             ?.trim()?.toLongOrNull()?.let { it / 1_000_000.0 }
 
+    /**
+     * The big cluster on a big.LITTLE SoC: every core whose cpufreq max frequency is at
+     * least 2.45 GHz. Little clusters top out below that (A55 at 2.0-2.4 GHz), while every
+     * current big core (A7x/X1-X4) boosts past it. Empty when the SoC is homogeneous.
+     */
+    fun bigCores(): Set<Int> =
+        all.filter { (maxGhz(it) ?: 0.0) >= 2.45 }.toSet()
+
+    /**
+     * A default game core list that keeps the emulated (FEX) threads off the little cores:
+     * an A55 runs translated code several times slower, and the scheduler otherwise parks
+     * JIT and game threads there under load. Empty when the SoC has no distinct big cluster
+     * or every core qualifies, which keeps the unrestricted behaviour.
+     */
+    fun bigClusterDefault(): String {
+        val big = bigCores()
+        return if (big.isEmpty() || big.size >= all.size) "" else format(big)
+    }
+
     fun parse(list: String): Set<Int> =
         list.split(',').mapNotNull { it.trim().toIntOrNull() }.filter { it in all }.toSet()
 

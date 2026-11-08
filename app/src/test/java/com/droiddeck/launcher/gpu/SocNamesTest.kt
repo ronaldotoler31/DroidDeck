@@ -30,4 +30,12 @@ class SocNamesTest {
         assertNull(SocNames.name("SM8975-PRO", ""))
         assertNull(SocNames.name("Qualcomm SM8975", ""))
     }
+    @Test fun exynosModelAndPlatformNamesResolve() {
+        assertEquals("Exynos 2100", SocNames.name("s5e9840", ""))
+        assertEquals("Exynos 2100", SocNames.name("S5E9840", "exynos2100"))
+        assertEquals("Exynos 2100 family", SocNames.name("", "universal2100"))
+        assertEquals("Exynos 2100 (s5e9840)", SocNames.label("s5e9840", ""))
+        assertEquals("Exynos 2400", SocNames.name("S5E9945", ""))
+        assertNull(SocNames.name("S5E0000", ""))
+    }
 }
